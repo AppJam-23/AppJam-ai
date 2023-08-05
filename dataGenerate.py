@@ -1,19 +1,24 @@
 import random
-import csv
 import names
+import mysql.connector
 
-# Generate random float with one decimal point between min_val and max_val
+# MYSQL_USERNAME= root
+# MYSQL_PASSWORD= mysql
+# MYSQL_DATABASE= AppJam-23
+# MYSQL_HOST= svc.sel4.cloudtype.app
+# MYSQL_PORT= 32676
+
 def random_float(min_val, max_val):
     return round(random.uniform(min_val, max_val), 1)
 
-with open("generated_data.csv", "w", encoding="utf-8") as csvfile:
-    fieldnames = ["id", "Name", "Age", "Gender", "Temperature", "Step", "Heart", "Sleep", "Suspected", "Patient"]
-    csv_writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-    csv_writer.writeheader()
-    
+def insert_data():
+    # Change this line with your connection
+    connection = mysql.connector.connect(host="svc.sel4.cloudtype.app", user="root", password="mysql", database="AppJam-23", port="32676")
+    cursor = connection.cursor()
+
     for i in range(100):
         age = random.randint(14, 17)
-        name = names.get_full_name()
+        name = names.get_full_name().replace("'", "''")
         gender = random.randint(0, 1)
         temperature = random_float(35.0, 39.0)
         step = random.randint(5000, 15000)
@@ -23,15 +28,12 @@ with open("generated_data.csv", "w", encoding="utf-8") as csvfile:
         suspected = 1 if status == 1 else 0
         patient = 1 if status == 2 else 0
 
-        csv_writer.writerow({
-            "id": i + 1,
-            "Name": name,
-            "Age": age,
-            "Gender": gender,
-            "Temperature": temperature,
-            "Step": step,
-            "Heart": heart,
-            "Sleep": sleep,
-            "Suspected": suspected,
-            "Patient": patient
-        })
+        insert_query = f"INSERT INTO `People_Info` (`id`, `Name`, `Age`, `Gender`, `Temperature`, `Step`, `Heart`, `Sleep`, `Suspected`, `Patient`) VALUES ({i + 1}, '{name}', {age}, {gender}, {temperature}, {step}, {heart}, {sleep}, {suspected}, {patient});"
+        
+        cursor.execute(insert_query)
+        connection.commit()
+
+    cursor.close()
+    connection.close()
+
+insert_data()
